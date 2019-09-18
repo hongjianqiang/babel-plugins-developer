@@ -10,9 +10,16 @@ function sleep(sec: number) {
 
 export default (ctx: Koa.Context) => {
     return new Promise(async (resolve, reject) => {
-        await sleep(1);
+        let sec = 2;
 
-        ctx.body = JSON.stringify(Object.keys( ctx.query));
+        await sleep(sec);
+
+        ctx.body = `我延迟了${sec}秒才返回信息给你～～\n`;
+        
+        ctx.body += `${(new Date).toLocaleString('chinese', {
+            hour12: true
+        })} \n`;
+        ctx.body += JSON.stringify( ctx.query, null, 4);
         
         resolve();
     });

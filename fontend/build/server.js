@@ -1,5 +1,6 @@
 const express = require('express');
 const webpack = require('webpack');
+const httpProxyMiddleware  = require('http-proxy-middleware');
 const webpackDevMiddleware = require('webpack-dev-middleware');
 const webpackHotMiddleware = require('webpack-hot-middleware');
 
@@ -71,6 +72,13 @@ const hotInstance = webpackHotMiddleware(compiler, {
 
 app.use(devInstance);
 app.use(hotInstance);
+app.use(
+    '/api',
+    httpProxyMiddleware({
+        target: 'http://localhost:3001', 
+        changeOrigin: false 
+    })
+);
 
 devInstance.waitUntilValid(() => {
     console.log(`\n> Listening at http://localhost:${PORT}`);

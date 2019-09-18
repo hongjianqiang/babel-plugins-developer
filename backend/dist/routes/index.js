@@ -9,11 +9,11 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const fs = require("fs");
-const globby = require("globby");
+const Fs = require("fs");
+const Globby = require("globby");
 const stat = (filePath) => {
     return new Promise((resolve, rejects) => {
-        fs.stat(filePath, (err, stats) => {
+        Fs.stat(filePath, (err, stats) => {
             if (err) {
                 rejects(err);
             }
@@ -26,7 +26,7 @@ function default_1(ctx, next) {
         const rootDir = './dist';
         const pathname = ctx.url.split('?')[0];
         // 取得api目录下的所有api文件路径列表
-        const paths = yield globby([`${rootDir}/api/**`, '!node_modules']);
+        const paths = yield Globby([`${rootDir}/api/**`, '!node_modules']);
         // 从api文件路径列表中，查找到匹配该url地址的索引
         const pathIndex = paths.findIndex(p => `${rootDir}${pathname}/index.js` === p);
         if (pathIndex >= 0) {

@@ -5,10 +5,15 @@
             @tab-click="selectLeftTab"
         >
             <el-tab-pane label="代码" name="code">
-                <v-monaco ref="leftCode" @input="onInput"></v-monaco>
+                <v-monaco ref="leftCode" 
+                    @input="onInput"
+                ></v-monaco>
             </el-tab-pane>
             <el-tab-pane label="AST" name="ast">
-                <v-monaco ref="leftAst"></v-monaco>
+                <v-monaco ref="leftAst"
+                    :value="leftAst"
+                    lang="json"
+                ></v-monaco>
             </el-tab-pane>
         </el-tabs>
 
@@ -17,10 +22,14 @@
             @tab-click="selectRightTab"
         >
             <el-tab-pane label="代码" name="code">
-                <v-monaco ref="rightCode"></v-monaco>
+                <v-monaco ref="rightCode"
+                    :value="rightCode"
+                ></v-monaco>
             </el-tab-pane>
             <el-tab-pane label="AST" name="ast">
-                <v-monaco ref="rightAst"></v-monaco>
+                <v-monaco ref="rightAst"
+                    :value="rightAst"
+                ></v-monaco>
             </el-tab-pane>
         </el-tabs>
     </v-layout>
@@ -28,6 +37,8 @@
 
 <script>
     import { Tabs, TabPane } from 'element-ui';
+
+    import utils from '@/utils';
 
     export default {
         components: {
@@ -40,13 +51,23 @@
         data() {
             return {
                 activeLeftTab: 'code',
-                activeRightTab: 'code'
+                activeRightTab: 'code',
+
+                leftAst: '',
+                rightCode: '',
+                rightAst: ''
             }
         },
 
         methods: {
-            onInput(val) {
-                console.log(val);
+            async onInput(val) {
+                let res = await utils.fetch('/api/input/code', {
+                    body: val,
+                }).then((resp)=>resp.json());
+
+                console.log(res);
+                this.leftAst = res.data.inputAst;
+                // this.rightCode = val;
             },
 
             selectLeftTab({name} = e) {

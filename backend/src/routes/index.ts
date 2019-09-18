@@ -1,10 +1,10 @@
-import * as fs from 'fs';
+import * as Fs from 'fs';
 import * as Koa from 'koa';
-import * as globby from 'globby';
+import * as Globby from 'globby';
 
-const stat = (filePath: fs.PathLike): Promise<fs.Stats> => {
+const stat = (filePath: Fs.PathLike): Promise<Fs.Stats> => {
     return new Promise((resolve, rejects) => {
-        fs.stat(filePath, (err, stats) => {
+        Fs.stat(filePath, (err, stats) => {
             if(err) {
                 rejects(err);
             }
@@ -18,7 +18,7 @@ export default async function(ctx: Koa.Context, next: Function) {
     const pathname = ctx.url.split('?')[0];
 
     // 取得api目录下的所有api文件路径列表
-    const paths = await globby([`${rootDir}/api/**`, '!node_modules']);
+    const paths = await Globby([`${rootDir}/api/**`, '!node_modules']);
     // 从api文件路径列表中，查找到匹配该url地址的索引
     const pathIndex = paths.findIndex(p => `${rootDir}${pathname}/index.js` === p);
 

@@ -1,5 +1,5 @@
 <template>
-    <div class="editor" ref="editor"></div>
+    <div class="editor" ref="editor" :data-content="content"></div>
 </template>
 
 <script>
@@ -7,7 +7,7 @@
 
     export default {
         props: {
-            language: {
+            lang: {
                 type: String,
                 default: 'javascript'
             },
@@ -61,10 +61,24 @@
                 });
 
                 // 监听编辑器的输入事件
-                this.editor.onDidChangeModelContent((e) => {
+                this.editor.onDidChangeModelContent(() => {
                     let value = this.editor.getValue();
                     this.$emit('input', value);
                 });
+
+                this.editor.onDidBlurEditorText(() => {
+                    let value = this.editor.getValue();
+                    this.$emit('blur', value);
+                });
+            }
+        },
+
+        computed: {
+            content() {
+                this.$nextTick(()=>{
+                    this.editor && this.editor.setValue(this.value);
+                });
+                return this.value;
             }
         },
 
