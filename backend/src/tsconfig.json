@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "strictPropertyInitialization": true,
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "alwaysStrict": true,
+        "noEmitOnError":true,
+        "module": "commonjs",
+        "target": "es2015",
+        "outDir": "../dist",
+        "watch": true
+    }
+}

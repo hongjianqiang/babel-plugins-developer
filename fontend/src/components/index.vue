@@ -1,20 +1,26 @@
 <template>
     <v-layout>
-        <el-tabs type="border-card" slot="left" class="tabs">
-            <el-tab-pane label="代码">
-                <v-monaco></v-monaco>
+        <el-tabs type="border-card" slot="left" class="tabs" 
+            v-model="activeLeftTab" 
+            @tab-click="selectLeftTab"
+        >
+            <el-tab-pane label="代码" name="code">
+                <v-monaco ref="leftCode" @input="onInput"></v-monaco>
             </el-tab-pane>
-            <el-tab-pane label="AST">
-                <v-monaco></v-monaco>
+            <el-tab-pane label="AST" name="ast">
+                <v-monaco ref="leftAst"></v-monaco>
             </el-tab-pane>
         </el-tabs>
 
-        <el-tabs type="border-card" slot="right" class="tabs">
-            <el-tab-pane label="代码">
-                <v-monaco></v-monaco>
+        <el-tabs type="border-card" slot="right" class="tabs" 
+            v-model="activeRightTab" 
+            @tab-click="selectRightTab"
+        >
+            <el-tab-pane label="代码" name="code">
+                <v-monaco ref="rightCode"></v-monaco>
             </el-tab-pane>
-            <el-tab-pane label="AST">
-                <v-monaco></v-monaco>
+            <el-tab-pane label="AST" name="ast">
+                <v-monaco ref="rightAst"></v-monaco>
             </el-tab-pane>
         </el-tabs>
     </v-layout>
@@ -29,6 +35,28 @@
             [TabPane.name]: TabPane,
             'v-layout': ()=>import('./layout/layout.vue'),
             'v-monaco': ()=>import('./monaco/monaco.vue'),
+        },
+
+        data() {
+            return {
+                activeLeftTab: 'code',
+                activeRightTab: 'code'
+            }
+        },
+
+        methods: {
+            onInput(val) {
+                console.log(val);
+            },
+
+            selectLeftTab({name} = e) {
+                name = name[0].toUpperCase()+name.slice(1);
+                this.$refs['left'+name].layout();
+            },
+            selectRightTab({name} = e) {
+                name = name[0].toUpperCase()+name.slice(1);
+                this.$refs['right'+name].layout();
+            },
         }
     }
 </script>

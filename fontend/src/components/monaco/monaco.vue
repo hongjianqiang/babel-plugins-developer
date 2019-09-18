@@ -37,9 +37,8 @@
         },
 
         methods: {
-            refresh() {
+            layout() {
                 this.$nextTick(()=>{
-                    this.editor && this.editor.setValue(this.value);
                     this.editor && this.editor.layout();
                 });
             },
@@ -78,7 +77,7 @@
         },
 
         resize(e) {
-            this.refresh();
+            this.layout();
         },
     }
 </script>
