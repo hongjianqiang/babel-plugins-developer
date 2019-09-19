@@ -76,9 +76,16 @@ exports.default = (ctx) => {
             ctx.body = usage;
         }
         else if (ctx.method === 'POST') {
-            let postData, inputAst;
+            let postData = '', inputAst = '';
             postData = yield getPostData(ctx);
-            inputAst = JSON.stringify(yield getAst(postData), null, 4);
+            try {
+                inputAst = JSON.stringify(yield getAst(postData), null, 4);
+            }
+            catch (e) {
+                inputAst = e.message.split('\n')[0];
+                console.clear();
+                console.log(e.message.toString());
+            }
             ctx.body = {
                 success: true,
                 data: {
