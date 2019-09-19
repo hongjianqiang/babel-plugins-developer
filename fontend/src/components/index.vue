@@ -67,7 +67,8 @@
 
                 console.log(res);
                 this.leftAst = res.data.inputAst;
-                // this.rightCode = val;
+                this.rightCode = res.data.outputCode;
+                this.rightAst  = res.data.outputAst;
             },
 
             selectLeftTab({name} = e) {

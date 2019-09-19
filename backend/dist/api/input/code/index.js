@@ -92,21 +92,29 @@ exports.default = (ctx) => {
         else if (ctx.method === 'POST') {
             let postData = '', inputAst = '', outputCode = '', outputAst = '';
             postData = yield getPostData(ctx);
+            // 将输入代码解析为AST语法树
             try {
                 inputAst = JSON.stringify(yield getAst(postData), null, 4);
             }
             catch (e) {
                 inputAst = e.message.split('\n')[0];
                 console.clear();
-                console.log(e.message.toString());
+                console.log(e);
             }
+            // 转换
             try {
-                const output = yield getTransform(postData);
+                const plugin = require('../../../../../plugins/accurate-operator');
+                // const plugin = import('../../../../../plugins/accurate-operator');
+                const output = yield getTransform(postData, {
+                    plugins: [plugin]
+                });
                 outputCode = (output && output.code) || '';
-                // console.log(output);
+                outputAst = JSON.stringify(yield getAst(outputCode), null, 4);
             }
             catch (e) {
                 outputCode = outputAst = e.message.split('\n')[0];
+                console.clear();
+                console.log(e);
             }
             ctx.body = {
                 success: true,
