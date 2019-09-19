@@ -32,6 +32,7 @@ await fetch('/api/input/code', {
 
 import * as Koa from 'koa';
 import * as Crypto from 'crypto';
+import * as Globby from 'globby';
 import * as Babel from '@babel/core';
 
 function getPostData(ctx: Koa.Context): Promise<string> {
@@ -72,10 +73,17 @@ function getTransform(code: string, opts?: Babel.TransformOptions | undefined): 
     });
 }
 
+function getPlugins(): string[] {
+    return [];
+}
+
 export default (ctx: Koa.Context) => {
     const SHA1 = (data: string) => Crypto.createHash('sha1').update(data, 'utf8').digest('hex');
 
     return new Promise(async (resolve, reject) => {
+        // const paths = await Globby([`../plugins/**/*.js`, '!node_modules'], { absolute: true }); console.log( paths );
+        const paths = await Globby([`./dist/api/**/*.js`, '!node_modules'], { absolute: true }); console.log( paths );
+
         if( ctx.method === 'GET' ) {
             ctx.body = usage;
         } else if( ctx.method === 'POST' ) {

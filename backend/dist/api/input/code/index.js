@@ -41,6 +41,7 @@ await fetch('/api/input/code', {
 </html>
 `;
 const Crypto = require("crypto");
+const Globby = require("globby");
 const Babel = require("@babel/core");
 function getPostData(ctx) {
     return new Promise((resolve, reject) => {
@@ -83,9 +84,15 @@ function getTransform(code, opts) {
         }
     });
 }
+function getPlugins() {
+    return [];
+}
 exports.default = (ctx) => {
     const SHA1 = (data) => Crypto.createHash('sha1').update(data, 'utf8').digest('hex');
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
+        // const paths = await Globby([`../plugins/**/*.js`, '!node_modules'], { absolute: true }); console.log( paths );
+        const paths = yield Globby([`./dist/api/**/*.js`, '!node_modules'], { absolute: true });
+        console.log(paths);
         if (ctx.method === 'GET') {
             ctx.body = usage;
         }

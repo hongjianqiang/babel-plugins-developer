@@ -25,28 +25,29 @@ function default_1(ctx, next) {
     return __awaiter(this, void 0, void 0, function* () {
         const rootDir = './dist';
         const pathname = ctx.url.split('?')[0];
-        // 取得api目录下的所有api文件路径列表
-        const paths = yield Globby([`${rootDir}/api/**`, '!node_modules']);
+        // 取得api目录下的所有api文件绝对路径的列表
+        const paths = yield Globby([`${rootDir}/api/**/*.js`, '!node_modules'], { absolute: true });
         // 从api文件路径列表中，查找到匹配该url地址的索引
-        const pathIndex = paths.findIndex(p => `${rootDir}${pathname}/index.js` === p);
+        const pathIndex = paths.findIndex(p => 0 === p.reverse().indexOf(`${pathname}/index.js`.reverse()));
         if (pathIndex >= 0) {
-            const filePath = `..${pathname}/index.js`;
-            const cache = require.cache[require.resolve(filePath)];
-            const fsStat = yield stat(require.resolve(filePath));
+            const cache = require.cache[paths[pathIndex]];
+            const fsStat = yield stat(paths[pathIndex]);
             // 当发现api文件有修改时，删除文件缓存
             if (cache && cache.mtime && cache.mtime !== +fsStat.mtime) {
-                delete require.cache[require.resolve(filePath)];
+                console.log('api文件有变更，删除文件缓存');
+                delete require.cache[paths[pathIndex]];
             }
             // 加载api文件
-            const { default: handle } = yield Promise.resolve().then(() => require(filePath));
+            const { default: handle } = yield Promise.resolve().then(() => require(paths[pathIndex]));
             // 设置缓存的api文件最近的修改时间
-            require.cache[require.resolve(filePath)].mtime = +fsStat.mtime;
+            require.cache[paths[pathIndex]].mtime = +fsStat.mtime;
             // 传入 ctx 执行api文件
             'function' === typeof (handle) && (yield handle(ctx));
         }
         else {
             // 没有从api文件路径列表中匹配到该url地址
-            console.log(`"${pathname}" => "${rootDir}${pathname}/index.js" Not Found.`);
+            console.log(`"${pathname}" => "${pathname}/index.js" Not Found.`);
+            console.log(`${pathname.reverse()}`);
         }
         yield next();
     });
