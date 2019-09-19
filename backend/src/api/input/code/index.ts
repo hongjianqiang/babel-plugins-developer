@@ -59,6 +59,19 @@ function getAst(code: string): Promise<Babel.types.File | Babel.types.Program | 
     });
 }
 
+function getTransform(code: string, opts?: Babel.TransformOptions | undefined): Promise<Babel.BabelFileResult | null> {
+    return new Promise((resolve, reject) => {
+        try {
+            Babel.transform(code, opts, (err, result) => {
+                if(err) reject(err);
+                resolve(result)
+            });
+        } catch(e) {
+            reject(e);
+        }
+    });
+}
+
 export default (ctx: Koa.Context) => {
     const SHA1 = (data: string) => Crypto.createHash('sha1').update(data, 'utf8').digest('hex');
 
@@ -66,7 +79,8 @@ export default (ctx: Koa.Context) => {
         if( ctx.method === 'GET' ) {
             ctx.body = usage;
         } else if( ctx.method === 'POST' ) {
-            let postData = '', inputAst = '';
+            let postData = '', inputAst = '', 
+                outputCode = '', outputAst = '';
 
             postData = await getPostData(ctx);
 
@@ -78,13 +92,21 @@ export default (ctx: Koa.Context) => {
                 console.log(e.message.toString());
             }
 
+            try {
+                const output = await getTransform(postData);
+                outputCode = (output && output.code) || '';
+                // console.log(output);
+            } catch(e) {
+                outputCode = outputAst = e.message.split('\n')[0];
+            }
+
             ctx.body = {
                 success: true,
                 data: {
                     SHA1: SHA1(postData),
                     inputAst,
-                    outputCode: '',
-                    outputAst: ''
+                    outputCode,
+                    outputAst
                 }
             };
         }

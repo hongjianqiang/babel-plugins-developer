@@ -69,6 +69,20 @@ function getAst(code) {
         }
     });
 }
+function getTransform(code, opts) {
+    return new Promise((resolve, reject) => {
+        try {
+            Babel.transform(code, opts, (err, result) => {
+                if (err)
+                    reject(err);
+                resolve(result);
+            });
+        }
+        catch (e) {
+            reject(e);
+        }
+    });
+}
 exports.default = (ctx) => {
     const SHA1 = (data) => Crypto.createHash('sha1').update(data, 'utf8').digest('hex');
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
@@ -76,7 +90,7 @@ exports.default = (ctx) => {
             ctx.body = usage;
         }
         else if (ctx.method === 'POST') {
-            let postData = '', inputAst = '';
+            let postData = '', inputAst = '', outputCode = '', outputAst = '';
             postData = yield getPostData(ctx);
             try {
                 inputAst = JSON.stringify(yield getAst(postData), null, 4);
@@ -86,13 +100,21 @@ exports.default = (ctx) => {
                 console.clear();
                 console.log(e.message.toString());
             }
+            try {
+                const output = yield getTransform(postData);
+                outputCode = (output && output.code) || '';
+                // console.log(output);
+            }
+            catch (e) {
+                outputCode = outputAst = e.message.split('\n')[0];
+            }
             ctx.body = {
                 success: true,
                 data: {
                     SHA1: SHA1(postData),
                     inputAst,
-                    outputCode: '',
-                    outputAst: ''
+                    outputCode,
+                    outputAst
                 }
             };
         }
