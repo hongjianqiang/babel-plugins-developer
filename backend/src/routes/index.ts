@@ -1,17 +1,7 @@
-import * as Fs from 'fs';
 import * as Koa from 'koa';
 import * as Globby from 'globby';
 
-const stat = (filePath: Fs.PathLike): Promise<Fs.Stats> => {
-    return new Promise((resolve, rejects) => {
-        Fs.stat(filePath, (err, stats) => {
-            if(err) {
-                rejects(err);
-            }
-            resolve(stats);
-        });
-    });
-};
+import { stat } from '../utils';
 
 export default async function(ctx: Koa.Context, next: Function) {
     const rootDir = './dist';

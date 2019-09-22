@@ -9,18 +9,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const Fs = require("fs");
 const Globby = require("globby");
-const stat = (filePath) => {
-    return new Promise((resolve, rejects) => {
-        Fs.stat(filePath, (err, stats) => {
-            if (err) {
-                rejects(err);
-            }
-            resolve(stats);
-        });
-    });
-};
+const utils_1 = require("../utils");
 function default_1(ctx, next) {
     return __awaiter(this, void 0, void 0, function* () {
         const rootDir = './dist';
@@ -31,7 +21,7 @@ function default_1(ctx, next) {
         const pathIndex = paths.findIndex(p => 0 === p.reverse().indexOf(`${pathname}/index.js`.reverse()));
         if (pathIndex >= 0) {
             const cache = require.cache[paths[pathIndex]];
-            const fsStat = yield stat(paths[pathIndex]);
+            const fsStat = yield utils_1.stat(paths[pathIndex]);
             // 当发现api文件有修改时，删除文件缓存
             if (cache && cache.mtime && cache.mtime !== +fsStat.mtime) {
                 console.log('api文件有变更，删除文件缓存');

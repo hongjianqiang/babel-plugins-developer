@@ -35,6 +35,8 @@ import * as Crypto from 'crypto';
 import * as Globby from 'globby';
 import * as Babel from '@babel/core';
 
+import { stat } from '../../../utils';
+
 function getPostData(ctx: Koa.Context): Promise<string> {
     return new Promise((resolve, reject) => {
         try {
@@ -73,16 +75,37 @@ function getTransform(code: string, opts?: Babel.TransformOptions | undefined): 
     });
 }
 
-function getPlugins(): string[] {
-    return [];
+function getPlugins(): Promise<any[]> {
+    return new Promise(async (resolve) => {
+        let plugins: any = [];
+        let paths = await Globby([`../plugins/**/*.js`, '!node_modules'], { absolute: true });
+
+        for await (const path of paths) {
+            const cache = require.cache[path];
+            const fsStat = await stat(path);
+    
+            // 当发现插件文件有修改时，删除文件缓存
+            if( cache && cache.mtime && cache.mtime !== +fsStat.mtime) {
+                delete require.cache[path];
+            }
+    
+            // 加载插件文件
+            const plugin = require(path); 
+            plugins.push(plugin);
+    
+            // 设置缓存的api文件最近的修改时间
+            require.cache[path].mtime = +fsStat.mtime;
+        }
+
+        resolve(plugins);
+    });
 }
 
 export default (ctx: Koa.Context) => {
     const SHA1 = (data: string) => Crypto.createHash('sha1').update(data, 'utf8').digest('hex');
 
     return new Promise(async (resolve, reject) => {
-        // const paths = await Globby([`../plugins/**/*.js`, '!node_modules'], { absolute: true }); console.log( paths );
-        const paths = await Globby([`./dist/api/**/*.js`, '!node_modules'], { absolute: true }); console.log( paths );
+        const paths = await Globby([`./dist/api/**/*.js`, '!node_modules'], { absolute: true });
 
         if( ctx.method === 'GET' ) {
             ctx.body = usage;
@@ -103,10 +126,9 @@ export default (ctx: Koa.Context) => {
 
             // 转换
             try {
-                const plugin = require('../../../../../plugins/accurate-operator');
-                // const plugin = import('../../../../../plugins/accurate-operator');
+                const plugins = await getPlugins();
                 const output = await getTransform(postData, {
-                    plugins: [plugin]
+                    plugins
                 });
                 outputCode = (output && output.code) || '';
                 outputAst = JSON.stringify(await getAst(outputCode), null, 4);

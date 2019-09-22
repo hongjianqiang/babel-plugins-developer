@@ -8,6 +8,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __asyncValues = (this && this.__asyncValues) || function (o) {
+    if (!Symbol.asyncIterator) throw new TypeError("Symbol.asyncIterator is not defined.");
+    var m = o[Symbol.asyncIterator], i;
+    return m ? m.call(o) : (o = typeof __values === "function" ? __values(o) : o[Symbol.iterator](), i = {}, verb("next"), verb("throw"), verb("return"), i[Symbol.asyncIterator] = function () { return this; }, i);
+    function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
+    function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const usage = `
 <!DOCTYPE html>
@@ -43,6 +50,7 @@ await fetch('/api/input/code', {
 const Crypto = require("crypto");
 const Globby = require("globby");
 const Babel = require("@babel/core");
+const utils_1 = require("../../../utils");
 function getPostData(ctx) {
     return new Promise((resolve, reject) => {
         try {
@@ -85,14 +93,40 @@ function getTransform(code, opts) {
     });
 }
 function getPlugins() {
-    return [];
+    return new Promise((resolve) => __awaiter(this, void 0, void 0, function* () {
+        var e_1, _a;
+        let plugins = [];
+        let paths = yield Globby([`../plugins/**/*.js`, '!node_modules'], { absolute: true });
+        try {
+            for (var paths_1 = __asyncValues(paths), paths_1_1; paths_1_1 = yield paths_1.next(), !paths_1_1.done;) {
+                const path = paths_1_1.value;
+                const cache = require.cache[path];
+                const fsStat = yield utils_1.stat(path);
+                // 当发现插件文件有修改时，删除文件缓存
+                if (cache && cache.mtime && cache.mtime !== +fsStat.mtime) {
+                    delete require.cache[path];
+                }
+                // 加载插件文件
+                const plugin = require(path);
+                plugins.push(plugin);
+                // 设置缓存的api文件最近的修改时间
+                require.cache[path].mtime = +fsStat.mtime;
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (paths_1_1 && !paths_1_1.done && (_a = paths_1.return)) yield _a.call(paths_1);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        resolve(plugins);
+    }));
 }
 exports.default = (ctx) => {
     const SHA1 = (data) => Crypto.createHash('sha1').update(data, 'utf8').digest('hex');
     return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        // const paths = await Globby([`../plugins/**/*.js`, '!node_modules'], { absolute: true }); console.log( paths );
         const paths = yield Globby([`./dist/api/**/*.js`, '!node_modules'], { absolute: true });
-        console.log(paths);
         if (ctx.method === 'GET') {
             ctx.body = usage;
         }
@@ -110,10 +144,9 @@ exports.default = (ctx) => {
             }
             // 转换
             try {
-                const plugin = require('../../../../../plugins/accurate-operator');
-                // const plugin = import('../../../../../plugins/accurate-operator');
+                const plugins = yield getPlugins();
                 const output = yield getTransform(postData, {
-                    plugins: [plugin]
+                    plugins
                 });
                 outputCode = (output && output.code) || '';
                 outputAst = JSON.stringify(yield getAst(outputCode), null, 4);
