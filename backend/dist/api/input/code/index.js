@@ -125,22 +125,32 @@ function getPlugins() {
 }
 exports.default = (ctx) => {
     const SHA1 = (data) => Crypto.createHash('sha1').update(data, 'utf8').digest('hex');
-    return new Promise((resolve, reject) => __awaiter(void 0, void 0, void 0, function* () {
-        const paths = yield Globby([`./dist/api/**/*.js`, '!node_modules'], { absolute: true });
+    return new Promise((resolve) => __awaiter(void 0, void 0, void 0, function* () {
         if (ctx.method === 'GET') {
             ctx.body = usage;
         }
         else if (ctx.method === 'POST') {
-            let postData = '', inputAst = '', outputCode = '', outputAst = '';
-            postData = yield getPostData(ctx);
+            let postData = '', inputAst = '', outputCode = '', outputAst = '', success = true;
+            try {
+                postData = yield getPostData(ctx);
+            }
+            catch (e) {
+                postData = '';
+                success = false;
+                console.clear();
+                console.error(e);
+            }
             // 将输入代码解析为AST语法树
             try {
                 inputAst = JSON.stringify(yield getAst(postData), null, 4);
+                console.clear();
+                console.log('解析AST成功');
             }
             catch (e) {
                 inputAst = e.message.split('\n')[0];
+                success = false;
                 console.clear();
-                console.log(e);
+                console.error(e);
             }
             // 转换
             try {
@@ -150,16 +160,18 @@ exports.default = (ctx) => {
                 });
                 outputCode = (output && output.code) || '';
                 outputAst = JSON.stringify(yield getAst(outputCode), null, 4);
+                console.log('转换成功');
             }
             catch (e) {
                 outputCode = outputAst = e.message.split('\n')[0];
+                success = false;
                 console.clear();
-                console.log(e);
+                console.error(e);
             }
             ctx.body = {
-                success: true,
+                success,
                 data: {
-                    SHA1: SHA1(postData),
+                    SHA1: postData && SHA1(postData),
                     inputAst,
                     outputCode,
                     outputAst

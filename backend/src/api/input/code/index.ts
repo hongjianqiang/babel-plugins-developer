@@ -104,24 +104,33 @@ function getPlugins(): Promise<any[]> {
 export default (ctx: Koa.Context) => {
     const SHA1 = (data: string) => Crypto.createHash('sha1').update(data, 'utf8').digest('hex');
 
-    return new Promise(async (resolve, reject) => {
-        const paths = await Globby([`./dist/api/**/*.js`, '!node_modules'], { absolute: true });
-
+    return new Promise(async (resolve) => {
         if( ctx.method === 'GET' ) {
             ctx.body = usage;
         } else if( ctx.method === 'POST' ) {
             let postData = '', inputAst = '', 
-                outputCode = '', outputAst = '';
+                outputCode = '', outputAst = '',
+                success = true;
 
-            postData = await getPostData(ctx);
+            try {
+                postData = await getPostData(ctx);
+            } catch(e) {
+                postData = '';
+                success = false;
+                console.clear();
+                console.error(e);
+            }
 
             // 将输入代码解析为AST语法树
             try {
                 inputAst = JSON.stringify(await getAst(postData), null, 4);
+                console.clear();
+                console.log('解析AST成功');
             } catch(e) {
                 inputAst = e.message.split('\n')[0];
+                success = false;
                 console.clear();
-                console.log(e);
+                console.error(e);
             }
 
             // 转换
@@ -132,16 +141,18 @@ export default (ctx: Koa.Context) => {
                 });
                 outputCode = (output && output.code) || '';
                 outputAst = JSON.stringify(await getAst(outputCode), null, 4);
+                console.log('转换成功');
             } catch(e) {
                 outputCode = outputAst = e.message.split('\n')[0];
+                success = false;
                 console.clear();
-                console.log(e);
+                console.error(e);
             }
 
             ctx.body = {
-                success: true,
+                success,
                 data: {
-                    SHA1: SHA1(postData),
+                    SHA1: postData && SHA1(postData),
                     inputAst,
                     outputCode,
                     outputAst

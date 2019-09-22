@@ -53,6 +53,7 @@
                 activeLeftTab: 'code',
                 activeRightTab: 'code',
 
+                leftCode: '',
                 leftAst: '',
                 rightCode: '',
                 rightAst: ''
@@ -60,7 +61,19 @@
         },
 
         methods: {
+            async watchPlugins() {
+                let resp = await utils.fetch('/api/watch/plugins', { 
+                    body: '' 
+                });
+
+                if(resp.ok) this.onInput();
+
+                this.watchPlugins();
+            },
+
             async onInput(val) {
+                val = val || this.leftCode;
+
                 let res = await utils.fetch('/api/input/code', {
                     body: val,
                 }).then((resp)=>resp.json());
@@ -69,6 +82,8 @@
                 this.leftAst = res.data.inputAst;
                 this.rightCode = res.data.outputCode;
                 this.rightAst  = res.data.outputAst;
+
+                this.leftCode = val;
             },
 
             selectLeftTab({name} = e) {
@@ -79,6 +94,10 @@
                 name = name[0].toUpperCase()+name.slice(1);
                 this.$refs['right'+name].layout();
             },
+        },
+
+        mounted() {
+            this.watchPlugins();
         }
     }
 </script>
