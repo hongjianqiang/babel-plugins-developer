@@ -1,7 +1,7 @@
 const utils = {
     /**
      * fetch请求
-     * 超时功能参考 https://juejin.im/post/5cdd1c19e51d453b7f0a0d8c
+     * 超时功能参考 https://zh.javascript.info/fetch-abort
      * @param {string} url 
      * @param {object} options 
      */
